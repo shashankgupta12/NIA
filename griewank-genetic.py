@@ -3,30 +3,32 @@ import math
 from functools import reduce
 import operator
 
-def objective(x):# griewank
-	# sqrsum = sum([i**2 for i in x])
-	# cosi = reduce(lambda x, y: x*y, [math.cos(i/math.sqrt(index + 1)) for index, i in enumerate(x)])
-	# fx = (sqrsum/4000) - cosi + 1
-	# print(round(fx, 2))
-	# return round(fx, 2)
-	# print(x)
-	# print(sum(x))
+def objective(x):
 	return sum(x)
 
 def initialize():
 	genes = 10
 	chromosomes = 100 # population size
-	return [[random.randint(-600, 600) for _ in range(genes)] for _ in range(chromosomes)]
+	return [[random.randint(1, 10) for _ in range(genes)] for _ in range(chromosomes)]
 
 def evaluate(population):
 	return [objective(x) for x in population]
+
+def repair(population):
+	for i in range(len(population)):
+		for j in range(len(population[0])):
+			if population[i][j] < 1:
+				population[i][j] = 1 
+			elif population[i][j] > 10:
+				population[i][j] = 10
+	return population
 
 def mutation(mutationRate, population):
 	mutationPerGeneration = round(mutationRate*len(population)*len(population[0]))
 	chromo = [random.choice(range(len(population)-5)) for _ in range(mutationPerGeneration)] # to prevent selecting the same element again and again for mutation
 	gene = [random.choice(range(len(population[0]))) for _ in range(mutationPerGeneration)] # to prevent selecting the same element again and again for mutation
 	for i in range(mutationPerGeneration):
-		population[chromo[i]][gene[i]] = random.randint(-600, 600)
+		population[chromo[i]][gene[i]] = random.randint(1, 10)
 	return population	
 
 def heuristic(parentsForCrossover):
@@ -38,8 +40,13 @@ def heuristic(parentsForCrossover):
 	sub = list(map(operator.sub, bestParent, worstParent))
 	offspring1 = list(map(operator.add, bestParent, [i*r for i in sub]))
 	offspring2 = bestParent
-	print(offspring1)
-	print(offspring2)
+	return (offspring1, offspring2)
+
+def onePoint(parentsForCrossover):
+	parent1 = parentsForCrossover[0]
+	parent2 = parentsForCrossover[1]
+	offspring1 = parent1[:5] + parent2[5:]
+	offspring2 = parent2[:5] + parent1[5:]
 	return (offspring1, offspring2)
 
 def crossover(crossoverRate, population):# one-point crossover
@@ -49,7 +56,7 @@ def crossover(crossoverRate, population):# one-point crossover
 		parentsForCrossover = random.sample(population, 2)
 		population.remove(parentsForCrossover[0])
 		population.remove(parentsForCrossover[1])
-		offsprings = heuristic(parentsForCrossover)
+		offsprings = heuristic(parentsForCrossover) # method for crossover
 		newPopulation.append(offsprings[0])
 		newPopulation.append(offsprings[1])
 
@@ -74,22 +81,16 @@ def optimize(crossoverRate, mutationRate):
 	population = initialize()
 	fitnessList = evaluate(population)
 
-	for _ in range(2):
+	for _ in range(1000):
 		population = selection(population, fitnessList)
-		# for i in population:
-		# 	print(i)
 		population = crossover(crossoverRate, population)
-		# for i in population:
-		# 	print(i)
 		population = mutation(mutationRate, population)
-		# for i in population:
-		# 	print(i)
-		population = repair(population)
+		population = repair(population) # most important function because heuristic crossover produces out of range offsprings
 		fitnessList = evaluate(population)
-		print()
-		print()
-		print()
 
 	return fitnessList
 
-print(optimize(0.6, 0.04))
+if __name__ == '__main__':
+	fitlist = optimize(0.5, 0.04)
+	print(fitlist)
+	print(max(fitlist))
