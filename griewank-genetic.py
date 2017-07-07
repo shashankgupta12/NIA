@@ -77,11 +77,11 @@ def selection(population, fitnessList):
 		actualCount.remove(maximum)
 	return newPopulation
 
-def optimize(crossoverRate, mutationRate):
+def optimize(crossoverRate, mutationRate, generations):
 	population = initialize()
 	fitnessList = evaluate(population)
 
-	for _ in range(1000):
+	for _ in range(generations):
 		population = selection(population, fitnessList)
 		population = crossover(crossoverRate, population)
 		population = mutation(mutationRate, population)
@@ -91,6 +91,12 @@ def optimize(crossoverRate, mutationRate):
 	return fitnessList
 
 if __name__ == '__main__':
-	fitlist = optimize(0.5, 0.04)
-	print(fitlist)
-	print(max(fitlist))
+	crossoverRate = 0.5
+	mutationRate = 0.4
+	generations = 3000
+	fitlist = optimize(crossoverRate, mutationRate, generations)
+	print('Final fitness values after running for {} generations: \n{}'.format(generations, fitlist))
+	print('Three highest fitness values along with their frequencies:')
+	high = sorted(set(fitlist), reverse=True)[:3]
+	for i in range(3):
+		print('Maximum {}: {}, Value {}: {}'.format(i + 1, high[i], i + 1, fitlist.count(high[i])))
